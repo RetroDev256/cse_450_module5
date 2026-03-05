@@ -30,7 +30,6 @@ train_datagen = ImageDataGenerator(
     horizontal_flip=False,
     width_shift_range=0.1,
     height_shift_range=0.1,
-    # brightness_range=(0.7,1.3),
 )
 
 validation_datagen = ImageDataGenerator(
@@ -84,18 +83,19 @@ target_names = [
 
 model = models.Sequential()
 
-model.add(layers.Conv2D(4, (3, 3), activation='relu', input_shape=(100, 100, 3)))
+model.add(layers.Conv2D(8, (3, 3), activation='relu', input_shape=(100, 100, 3)))
 model.add(layers.BatchNormalization())
 model.add(layers.MaxPooling2D((2, 2)))
 
-model.add(layers.Conv2D(8, (3, 3), activation='relu'))
+model.add(layers.Conv2D(16, (3, 3), activation='relu'))
 model.add(layers.BatchNormalization())
 model.add(layers.MaxPooling2D((2, 2)))
 
-model.add(layers.Conv2D(16, (7, 7), activation='relu'))
+model.add(layers.Conv2D(32, (3, 3), activation='relu'))
 model.add(layers.BatchNormalization())
 model.add(layers.MaxPooling2D((2, 2)))
 
+# TODO: try model.add(layers.GlobalAveragePooling2D()) here
 model.add(layers.Flatten())
 model.add(layers.Dense(64, activation="relu"))
 model.add(layers.BatchNormalization())
@@ -132,7 +132,7 @@ model.fit(
     validation_data=validation_generator,
     callbacks=[model_checkpoint_callback, early_stop],
     initial_epoch=0,
-    epochs=30, # 15
+    epochs=50,
 )
 
 # Load best weights
