@@ -30,6 +30,7 @@ train_datagen = ImageDataGenerator(
     horizontal_flip=False,
     width_shift_range=0.1,
     height_shift_range=0.1,
+    # brightness_range=(0.7,1.3),
 )
 
 validation_datagen = ImageDataGenerator(
@@ -77,7 +78,7 @@ target_names = [
 
 # For a batch size of 64, I had Calculated Accuracy: 0.9104477611940298
 # For a batch size of 32, I had Calculated Accuracy: 0.9203980099502488
-# After adding in batch normalization: ...
+# After adding in batch normalization: 0.9751243781094527 (WOW!)
 
 # ---------------------------------------------------------- MODEL ARCHITECTURE
 
@@ -96,16 +97,16 @@ model.add(layers.BatchNormalization())
 model.add(layers.MaxPooling2D((2, 2)))
 
 model.add(layers.Flatten())
-model.add(layers.Dense(64, activation='relu'))
+model.add(layers.Dense(64, activation="relu"))
 model.add(layers.BatchNormalization())
-model.add(layers.Dense(43))
+model.add(layers.Dense(43, activation="softmax"))
 model.summary()
 
 # -----------------------------------------------------  COMPILATION & TRAINING
 
 opt = keras.optimizers.Adam()
 model.compile(
-    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    loss="sparse_categorical_crossentropy",
     metrics=['accuracy'],
     optimizer=opt,
 )
@@ -119,12 +120,19 @@ model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     mode='max',
 )
 
+early_stop = tf.keras.callbacks.EarlyStopping(
+    restore_best_weights=True,
+    monitor='val_accuracy',
+    patience=5,
+    mode='max',
+)
+
 model.fit(
     train_generator,
     validation_data=validation_generator,
-    callbacks=[model_checkpoint_callback],
+    callbacks=[model_checkpoint_callback, early_stop],
     initial_epoch=0,
-    epochs=15,
+    epochs=30, # 15
 )
 
 # Load best weights
@@ -144,10 +152,10 @@ img = expand_dims(img, axis=0)
 # get feature map for first hidden layer
 feature_maps = model_temp.predict(img)
 
-# ------------------------------------------------------- TESTING & PREDICTIONS
+# ---------------------------------------- TESTING & PREDICTIONS - MINI HOLDOUT
 
-test_datagen = ImageDataGenerator(rescale=1./255)
-test_generator = test_datagen.flow_from_directory(
+mini_test_datagen = ImageDataGenerator(rescale=1./255)
+mini_test_generator = mini_test_datagen.flow_from_directory(
     "data/",
     classes=["mini_holdout"], 
     target_size=image_size,
@@ -155,24 +163,41 @@ test_generator = test_datagen.flow_from_directory(
     shuffle=False,
 )
 
+mini_predictions = model.predict(mini_test_generator)
+mini_y_pred = np.argmax(mini_predictions, axis=1)
+
+# Save results
+output = pd.DataFrame(mini_y_pred)
+output.to_csv("mini_holdout_predictions.csv", index=False)
+
+# ------------------------------------------------------- PREDICTIONS - HOLDOUT
+
+test_datagen = ImageDataGenerator(rescale=1./255)
+test_generator = test_datagen.flow_from_directory(
+    "data/",
+    classes=["holdout"], 
+    target_size=image_size,
+    class_mode='sparse', 
+    shuffle=False,
+)
+
 predictions = model.predict(test_generator)
-y_pred = [np.argmax(probas) for probas in predictions]
-print(y_pred)
+y_pred = np.argmax(predictions, axis=1)
 
 # Save results
 output = pd.DataFrame(y_pred)
-output.to_csv("predictions.csv", index=False)
+output.to_csv("holdout_predictions.csv", index=False)
 
 # ------------------------------------------------------------------ EVALUATION
 
 real_answers = pd.read_csv("data/mini_holdout_answers.csv")
 print(real_answers.head(100))
 
-print(classification_report(real_answers['ClassId'], y_pred))
+print(classification_report(real_answers['ClassId'], mini_y_pred))
 
 # Comparison Dataframe
 overall = pd.concat([
-    pd.DataFrame(y_pred, columns=['class']),
+    pd.DataFrame(mini_y_pred, columns=['class']),
     real_answers['ClassId'].reset_index(drop=True)
 ], axis=1)
 
@@ -184,7 +209,7 @@ print(overall.head(15))
 
 # ------------------------------------------------------------ CONFUSION MATRIX
 
-cm = confusion_matrix(real_answers['ClassId'], y_pred)
+cm = confusion_matrix(real_answers['ClassId'], mini_y_pred)
 
 plt.figure(figsize=(14, 12))
 plt.imshow(cm)
