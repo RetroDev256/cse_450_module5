@@ -78,11 +78,11 @@ target_names = [
 # ---------------------------------------------------------- MODEL ARCHITECTURE
 
 model = models.Sequential()
-model.add(layers.Conv2D(2, (3, 3), activation='relu', input_shape=(100, 100, 3)))
+model.add(layers.Conv2D(4, (3, 3), activation='relu', input_shape=(100, 100, 3)))
 model.add(layers.MaxPooling2D((2, 2)))
-model.add(layers.Conv2D(4, (3, 3), activation='relu'))
+model.add(layers.Conv2D(8, (3, 3), activation='relu'))
 model.add(layers.MaxPooling2D((2, 2)))
-model.add(layers.Conv2D(8, (7, 7), activation='relu'))
+model.add(layers.Conv2D(16, (7, 7), activation='relu'))
 model.add(layers.MaxPooling2D((4, 4)))
 
 # modify the hidden layers
@@ -181,18 +181,20 @@ print(overall.head(15))
 
 cm = confusion_matrix(real_answers['ClassId'], y_pred)
 
-plt.figure(figsize=(8, 6))
+plt.figure(figsize=(14, 12))
 plt.imshow(cm)
 plt.title("Confusion Matrix")
 plt.xlabel("Predicted Label")
 plt.ylabel("True Label")
-plt.xticks(np.arange(cm.shape[1]))
-plt.yticks(np.arange(cm.shape[0]))
+
+# Use target names
+plt.xticks(np.arange(len(target_names)), target_names, rotation=90)
+plt.yticks(np.arange(len(target_names)), target_names)
 
 # Add numbers inside cells
 for i in range(cm.shape[0]):
     for j in range(cm.shape[1]):
-        plt.text(j, i, cm[i, j], ha="center", va="center")
+        plt.text(j, i, cm[i, j], ha="center", va="center", fontsize=6)
 
 plt.colorbar()
 plt.tight_layout()
