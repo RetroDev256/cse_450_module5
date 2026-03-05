@@ -23,13 +23,13 @@ train_datagen = ImageDataGenerator(
     rescale=1.0/255,
     validation_split=0.2,
     # Attempted augmentations of the training set:
-    # zoom_range=0.3,
-    # shear_range=0.2,
-    # rotation_range=20,
-    # fill_mode='nearest',
-    # horizontal_flip=True,
-    # width_shift_range=0.2,
-    # height_shift_range=0.2,
+    zoom_range=0.1,
+    shear_range=0.1,
+    rotation_range=10,
+    fill_mode='nearest',
+    horizontal_flip=False,
+    width_shift_range=0.1,
+    height_shift_range=0.1,
 )
 
 validation_datagen = ImageDataGenerator(
@@ -75,23 +75,29 @@ target_names = [
     'End_Overtaking_Prohibition_Trucks'
 ]
 
+# For a batch size of 64, I had Calculated Accuracy: 0.9104477611940298
+# For a batch size of 32, I had Calculated Accuracy: 0.9203980099502488
+# After adding in batch normalization: ...
+
 # ---------------------------------------------------------- MODEL ARCHITECTURE
 
 model = models.Sequential()
-model.add(layers.Conv2D(4, (3, 3), activation='relu', input_shape=(100, 100, 3)))
-model.add(layers.MaxPooling2D((2, 2)))
-model.add(layers.Conv2D(8, (3, 3), activation='relu'))
-model.add(layers.MaxPooling2D((2, 2)))
-model.add(layers.Conv2D(16, (7, 7), activation='relu'))
-model.add(layers.MaxPooling2D((4, 4)))
 
-# modify the hidden layers
-# model.add(layers.Conv2D(4, (5,5), strides=2,padding='same', activation='leaky_relu'))
-# model.add(layers.MaxPooling2D((3, 3)))
-# model.add(layers.BatchNormalization())
+model.add(layers.Conv2D(4, (3, 3), activation='relu', input_shape=(100, 100, 3)))
+model.add(layers.BatchNormalization())
+model.add(layers.MaxPooling2D((2, 2)))
+
+model.add(layers.Conv2D(8, (3, 3), activation='relu'))
+model.add(layers.BatchNormalization())
+model.add(layers.MaxPooling2D((2, 2)))
+
+model.add(layers.Conv2D(16, (7, 7), activation='relu'))
+model.add(layers.BatchNormalization())
+model.add(layers.MaxPooling2D((2, 2)))
 
 model.add(layers.Flatten())
 model.add(layers.Dense(64, activation='relu'))
+model.add(layers.BatchNormalization())
 model.add(layers.Dense(43))
 model.summary()
 
@@ -117,7 +123,6 @@ model.fit(
     train_generator,
     validation_data=validation_generator,
     callbacks=[model_checkpoint_callback],
-    steps_per_epoch=120,
     initial_epoch=0,
     epochs=15,
 )
