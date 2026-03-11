@@ -102,13 +102,12 @@ target_names = [
 
 # ---------------------------------------------------------- MODEL ARCHITECTURE
 
-# TESTING ADDING DROPOUT LAYER
+# TESTING INCREASING CONV 1 FROM 16 TO 32
 
 model = models.Sequential()
 
 # TODO: padding="same" - it pads the image so conv filters don't shrink it
-# TODO: try changing to 32, and make 2x2 maxpooling
-model.add(layers.Conv2D(16, (3, 3), activation='relu', input_shape=(100, 100, 3)))
+model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(100, 100, 3)))
 model.add(layers.BatchNormalization())
 model.add(layers.MaxPooling2D((2, 2)))
 
