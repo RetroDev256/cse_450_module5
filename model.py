@@ -2,6 +2,7 @@
 
 import os
 import math
+import random
 import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
@@ -13,6 +14,24 @@ from sklearn.metrics import classification_report, confusion_matrix
 from PIL import Image, ImageEnhance, ImageStat
 import matplotlib.pyplot as plt
 import numpy as np
+
+# ------------------------------------------------- Make Training Deterministic
+
+SEED = 42
+tf.config.experimental.enable_op_determinism()
+os.environ["TF_CUDNN_DETERMINISTIC"] = "1"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_DETERMINISTIC_OPS"] = "1"
+os.environ["PYTHONHASHSEED"] = str(SEED)
+tf.keras.utils.set_random_seed(SEED)
+tf.random.set_seed(SEED)
+np.random.seed(SEED)
+random.seed(SEED)
+
+# ------------------------------------------------ Check If We Have GPU Support
+
+print("Num GPUs Available:", len(tf.config.list_physical_devices('GPU')))
+print(tf.config.list_physical_devices('GPU'))
 
 # ---------------------------------------------------------- Load Training Data
 
@@ -30,6 +49,8 @@ train_datagen = ImageDataGenerator(
     horizontal_flip=False,
     width_shift_range=0.1,
     height_shift_range=0.1,
+    # TODO: channel shift range - try it
+    # TODO: brightness shift range - try it
 )
 
 validation_datagen = ImageDataGenerator(
@@ -44,7 +65,7 @@ train_generator = train_datagen.flow_from_directory(
     subset="training",
     batch_size=32,
     shuffle=True,
-    seed=42,
+    seed=SEED,
 )
 
 validation_generator = validation_datagen.flow_from_directory(
@@ -53,7 +74,7 @@ validation_generator = validation_datagen.flow_from_directory(
     class_mode="sparse",
     subset="validation",
     batch_size=32,
-    seed=42
+    seed=SEED
 )
 
 # ---------------------------------------------------------------- Target Names
@@ -81,21 +102,28 @@ target_names = [
 
 # ---------------------------------------------------------- MODEL ARCHITECTURE
 
+# TESTING MAX POOLING 2x2 INSTEAD OF 3x3:
+#
+#
+
 model = models.Sequential()
 
+# TODO: padding="same" - it pads the image so conv filters don't shrink it
+# TODO: try changing to 32, and make 2x2 maxpooling
 model.add(layers.Conv2D(16, (3, 3), activation='relu', input_shape=(100, 100, 3)))
 model.add(layers.BatchNormalization())
-model.add(layers.MaxPooling2D((3, 3)))
+model.add(layers.MaxPooling2D((2, 2)))
 
 model.add(layers.Conv2D(64, (3, 3), activation='relu'))
 model.add(layers.BatchNormalization())
-model.add(layers.MaxPooling2D((3, 3)))
+model.add(layers.MaxPooling2D((2, 2)))
 
 model.add(layers.Conv2D(128, (3, 3), activation='relu'))
 model.add(layers.BatchNormalization())
-model.add(layers.MaxPooling2D((3, 3)))
+model.add(layers.MaxPooling2D((2, 2)))
 
 model.add(layers.Flatten())
+# TODO: add a dropout layer???
 model.add(layers.Dense(256, activation="relu"))
 model.add(layers.BatchNormalization())
 model.add(layers.Dense(43, activation="softmax"))
@@ -131,7 +159,7 @@ model.fit(
     validation_data=validation_generator,
     callbacks=[model_checkpoint_callback, early_stop],
     initial_epoch=0,
-    epochs=50,
+    epochs=500,
 )
 
 # Load best weights
