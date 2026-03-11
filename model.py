@@ -102,9 +102,7 @@ target_names = [
 
 # ---------------------------------------------------------- MODEL ARCHITECTURE
 
-# TESTING MAX POOLING 2x2 INSTEAD OF 3x3:
-#
-#
+# TESTING ADDING DROPOUT LAYER
 
 model = models.Sequential()
 
@@ -123,7 +121,7 @@ model.add(layers.BatchNormalization())
 model.add(layers.MaxPooling2D((2, 2)))
 
 model.add(layers.Flatten())
-# TODO: add a dropout layer???
+model.add(layers.Dropout(0.5))
 model.add(layers.Dense(256, activation="relu"))
 model.add(layers.BatchNormalization())
 model.add(layers.Dense(43, activation="softmax"))
