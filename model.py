@@ -122,7 +122,7 @@ model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
 early_stop = tf.keras.callbacks.EarlyStopping(
     restore_best_weights=True,
     monitor='val_accuracy',
-    patience=5,
+    patience=15,
     mode='max',
 )
 
@@ -136,6 +136,11 @@ model.fit(
 
 # Load best weights
 model.load_weights(checkpoint_filepath)
+
+# ------------------------------------------------------------- SAVE FULL MODEL
+
+model.save("model.keras")
+print("Model saved to model.keras")
 
 # --------------------------------------------------- FEATURE MAP VISUALIZATION
 

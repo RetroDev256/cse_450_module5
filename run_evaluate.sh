@@ -1,2 +1,2 @@
 . .venv/bin/activate
-python holdout.py
+python evaluate.py
