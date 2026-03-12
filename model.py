@@ -114,7 +114,7 @@ model.add(layers.BatchNormalization())
 model.add(layers.MaxPooling2D((2, 2)))
 
 model.add(layers.Flatten())
-model.add(layers.Dropout(0.9))
+model.add(layers.Dropout(0.5))
 model.add(layers.Dense(256, activation="relu"))
 model.add(layers.BatchNormalization())
 model.add(layers.Dense(43, activation="softmax"))
