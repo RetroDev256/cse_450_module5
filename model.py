@@ -41,6 +41,7 @@ image_size = (100, 100)
 train_datagen = ImageDataGenerator(
     rescale=1.0/255,
     validation_split=0.2,
+    
     # Attempted augmentations of the training set:
     zoom_range=0.1,
     shear_range=0.1,
@@ -49,7 +50,7 @@ train_datagen = ImageDataGenerator(
     horizontal_flip=False,
     width_shift_range=0.1,
     height_shift_range=0.1,
-    # channel_shift_range=20.0,
+    channel_shift_range=20.0,
     # brightness_range=[0.8, 1.2],
 )
 
@@ -96,13 +97,7 @@ target_names = [
     'End_Overtaking_Prohibition_Trucks'
 ]
 
-# For a batch size of 64, I had Calculated Accuracy: 0.9104477611940298
-# For a batch size of 32, I had Calculated Accuracy: 0.9203980099502488
-# After adding in batch normalization: 0.9751243781094527 (WOW!)
-
 # ---------------------------------------------------------- MODEL ARCHITECTURE
-
-# TESTING padding="same"
 
 model = models.Sequential()
 
@@ -119,7 +114,7 @@ model.add(layers.BatchNormalization())
 model.add(layers.MaxPooling2D((2, 2)))
 
 model.add(layers.Flatten())
-model.add(layers.Dropout(0.5))
+model.add(layers.Dropout(0.9))
 model.add(layers.Dense(256, activation="relu"))
 model.add(layers.BatchNormalization())
 model.add(layers.Dense(43, activation="softmax"))
