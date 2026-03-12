@@ -51,7 +51,7 @@ train_datagen = ImageDataGenerator(
     width_shift_range=0.1,
     height_shift_range=0.1,
     channel_shift_range=20.0,
-    # brightness_range=[0.8, 1.2],
+    brightness_range=[0.8, 1.2],
 )
 
 validation_datagen = ImageDataGenerator(

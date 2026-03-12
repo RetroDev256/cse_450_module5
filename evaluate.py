@@ -33,7 +33,67 @@ target_names = [
     'End_Overtaking_Prohibition_Trucks'
 ]
 
-# ------------------------------------------------ MINI HOLDOUT EVALUATION
+# ============================================================
+# TRAINING DATA EVALUATION
+# ============================================================
+
+train_datagen = ImageDataGenerator(rescale=1./255)
+
+train_generator = train_datagen.flow_from_directory(
+    "data/training",
+    target_size=image_size,
+    class_mode='sparse',
+    shuffle=False
+)
+
+train_predictions = model.predict(train_generator)
+train_y_pred = np.argmax(train_predictions, axis=1)
+
+train_y_true = train_generator.classes
+
+print("\n================ TRAINING DATA REPORT ================")
+
+print(classification_report(
+    train_y_true,
+    train_y_pred,
+    labels=range(43),
+    target_names=target_names
+))
+
+train_accuracy = np.mean(train_y_pred == train_y_true)
+print("Training Accuracy:", train_accuracy)
+
+# ---------------- Confusion Matrix (Training)
+
+labels_present_train = sorted(np.unique(train_y_true))
+target_subset_train = [target_names[i] for i in labels_present_train]
+
+cm_train = confusion_matrix(
+    train_y_true,
+    train_y_pred,
+    labels=labels_present_train
+)
+
+plt.figure(figsize=(14,12))
+plt.imshow(cm_train)
+plt.title("Training Confusion Matrix")
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+
+plt.xticks(np.arange(len(target_subset_train)), target_subset_train, rotation=90)
+plt.yticks(np.arange(len(target_subset_train)), target_subset_train)
+
+for i in range(cm_train.shape[0]):
+    for j in range(cm_train.shape[1]):
+        plt.text(j, i, cm_train[i, j], ha="center", va="center", fontsize=8)
+
+plt.colorbar()
+plt.tight_layout()
+plt.show()
+
+# ============================================================
+# MINI HOLDOUT EVALUATION
+# ============================================================
 
 mini_test_datagen = ImageDataGenerator(rescale=1./255)
 
@@ -47,8 +107,11 @@ mini_test_generator = mini_test_datagen.flow_from_directory(
 
 mini_predictions = model.predict(mini_test_generator)
 mini_y_pred = np.argmax(mini_predictions, axis=1)
+
 # Load real answers
 real_answers = pd.read_csv("data/mini_holdout_answers.csv")
+
+print("\n================ MINI HOLDOUT REPORT ================")
 
 print(classification_report(
     real_answers['ClassId'],
@@ -66,10 +129,10 @@ overall = pd.concat([
 accuracy_calc = 1 - len(overall[overall['class'] != overall['ClassId']]) / len(overall)
 print("Mini Holdout Accuracy:", accuracy_calc)
 
-# ------------------------------------------------------------ CONFUSION MATRIX
+# ---------------- Confusion Matrix (Mini Holdout)
 
-# Only include classes that appear in the mini holdout
 labels_present = sorted(real_answers['ClassId'].unique())
+target_subset = [target_names[i] for i in labels_present]
 
 cm = confusion_matrix(
     real_answers['ClassId'],
@@ -77,10 +140,7 @@ cm = confusion_matrix(
     labels=labels_present
 )
 
-# Corresponding target names
-target_subset = [target_names[i] for i in labels_present]
-
-plt.figure(figsize=(14, 12))
+plt.figure(figsize=(14,12))
 plt.imshow(cm)
 plt.title("Mini Holdout Confusion Matrix")
 plt.xlabel("Predicted Label")
@@ -89,7 +149,6 @@ plt.ylabel("True Label")
 plt.xticks(np.arange(len(target_subset)), target_subset, rotation=90)
 plt.yticks(np.arange(len(target_subset)), target_subset)
 
-# Add numbers in each cell
 for i in range(cm.shape[0]):
     for j in range(cm.shape[1]):
         plt.text(j, i, cm[i, j], ha="center", va="center", fontsize=8)
