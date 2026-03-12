@@ -49,8 +49,8 @@ train_datagen = ImageDataGenerator(
     horizontal_flip=False,
     width_shift_range=0.1,
     height_shift_range=0.1,
-    # TODO: channel shift range - try it
-    # TODO: brightness shift range - try it
+    # channel_shift_range=20.0,
+    # brightness_range=[0.8, 1.2],
 )
 
 validation_datagen = ImageDataGenerator(
@@ -102,20 +102,19 @@ target_names = [
 
 # ---------------------------------------------------------- MODEL ARCHITECTURE
 
-# TESTING INCREASING CONV 1 FROM 16 TO 32
+# TESTING padding="same"
 
 model = models.Sequential()
 
-# TODO: padding="same" - it pads the image so conv filters don't shrink it
-model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(100, 100, 3)))
+model.add(layers.Conv2D(32, (3, 3), activation='relu', padding="same"))
 model.add(layers.BatchNormalization())
 model.add(layers.MaxPooling2D((2, 2)))
 
-model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(layers.Conv2D(64, (3, 3), activation='relu', padding="same"))
 model.add(layers.BatchNormalization())
 model.add(layers.MaxPooling2D((2, 2)))
 
-model.add(layers.Conv2D(128, (3, 3), activation='relu'))
+model.add(layers.Conv2D(128, (3, 3), activation='relu', padding="same"))
 model.add(layers.BatchNormalization())
 model.add(layers.MaxPooling2D((2, 2)))
 
@@ -124,7 +123,6 @@ model.add(layers.Dropout(0.5))
 model.add(layers.Dense(256, activation="relu"))
 model.add(layers.BatchNormalization())
 model.add(layers.Dense(43, activation="softmax"))
-model.summary()
 
 # -----------------------------------------------------  COMPILATION & TRAINING
 
