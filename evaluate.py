@@ -75,7 +75,7 @@ cm_train = confusion_matrix(
 )
 
 plt.figure(figsize=(14,12))
-plt.imshow(cm_train)
+plt.imshow(cm_train, cmap="gray_r")
 plt.title("Training Confusion Matrix")
 plt.xlabel("Predicted Label")
 plt.ylabel("True Label")
@@ -141,7 +141,7 @@ cm = confusion_matrix(
 )
 
 plt.figure(figsize=(14,12))
-plt.imshow(cm)
+plt.imshow(cm, cmap="gray_r")
 plt.title("Mini Holdout Confusion Matrix")
 plt.xlabel("Predicted Label")
 plt.ylabel("True Label")
@@ -156,3 +156,71 @@ for i in range(cm.shape[0]):
 plt.colorbar()
 plt.tight_layout()
 plt.show()
+
+# ============================================================
+# HARDEST TRAINING EXAMPLES
+# ============================================================
+
+# Max probability for each image
+max_probs = np.max(train_predictions, axis=1)
+
+# Indices of the 10 lowest confidence predictions
+hardest_indices = np.argsort(max_probs)[:100]
+
+print("\n================ HARDEST TRAINING IMAGES ================")
+
+for idx in hardest_indices:
+
+    probs = train_predictions[idx]
+
+    # top 2 predictions
+    top2 = np.argsort(probs)[-2:][::-1]
+
+    p1, p2 = probs[top2[0]], probs[top2[1]]
+
+    class1 = target_names[top2[0]]
+    class2 = target_names[top2[1]]
+
+    path = train_generator.filepaths[idx]
+
+    print("\nImage:", path)
+    print("Top prediction:", class1, "(", p1, ")")
+    print("Second prediction:", class2, "(", p2, ")")
+
+# ============================================================
+# MOST CONFUSED TRAINING IMAGES (closest top-two predictions)
+# ============================================================
+
+records = []
+
+for i, probs in enumerate(train_predictions):
+
+    # indices of the top two classes
+    top2 = np.argsort(probs)[-2:][::-1]
+
+    p1 = probs[top2[0]]
+    p2 = probs[top2[1]]
+
+    margin = abs(p1 - p2)
+    strength = p1 + p2
+
+    records.append((margin, -strength, i, top2, p1, p2))
+
+# Sort by margin first, then by strength
+records.sort()
+
+top10 = records[:10]
+
+print("\n================ MOST CONFUSED TRAINING IMAGES ================")
+
+for margin, neg_strength, idx, top2, p1, p2 in top10:
+
+    class1 = target_names[top2[0]]
+    class2 = target_names[top2[1]]
+
+    path = train_generator.filepaths[idx]
+
+    print("\nImage:", path)
+    print("Top prediction:", class1, f"({p1:.4f})")
+    print("Second prediction:", class2, f"({p2:.4f})")
+    print("Margin:", f"{margin:.6f}")

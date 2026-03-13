@@ -101,7 +101,7 @@ target_names = [
 
 model = models.Sequential()
 
-model.add(layers.Conv2D(32, (3, 3), activation='relu', padding="same"))
+model.add(layers.Conv2D(16, (3, 3), activation='relu', padding="same"))
 model.add(layers.BatchNormalization())
 model.add(layers.MaxPooling2D((2, 2)))
 
